@@ -1,0 +1,26 @@
+diff --git a/application.c b/application.c
+index e3530aa..8aef5a5 100644
+--- a/application.c
++++ b/application.c
+@@ -339,7 +339,6 @@ applications_destroy(struct application_list *apps)
+         free(app->path);
+         free(app->exec);
+         free(app->app_id);
+-        free(app->title);
+         if (app->render_title != app->title)
+             free(app->render_title);
+         free(app->title_lowercase);
+diff --git a/render.c b/render.c
+index e458dde..bc25afb 100644
+--- a/render.c
++++ b/render.c
+@@ -1036,6 +1036,9 @@ render_one_match_entry(const struct render *render, const struct matches *matche
+             : 0) +
+         pt_or_px_as_pixels(render, &render->conf->letter_spacing);
+ 
++    /* Show all application titles in lowercase */
++    match->application->title = match->application->title_lowercase;
++
+     /* Replace newlines in title, with spaces (basic support for
+      * multiline entries) */
+     if (match->application->render_title == NULL) {
