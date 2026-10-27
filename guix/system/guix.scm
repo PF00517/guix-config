@@ -5,8 +5,10 @@
              (gnu system privilege)
 			 (guix services pm)
              (guix system base)
+             (guix packages linux)
              (guix system modules files)
              (guix system modules secrets)
+             (guix system modules privilege)
 			 (guix system modules file-systems)
              ((guix system substitute-keys) #:prefix substitute-key:)
              (guix gexp))
@@ -14,9 +16,9 @@
 (use-service-modules admin base pm avahi dbus cups desktop guix
                      linux networking xorg shepherd sysctl)
 
-(use-package-modules audio admin bash base video nfs linux shells
-                     compression gawk guile less man pciutils ;; window-management 
-					 libusb cups freedesktop file-systems tex-info
+(use-package-modules audio admin bash base video nfs nss linux shells
+                     compression gawk guile guile-xyz less man pciutils ;; window-management
+					 libusb cups freedesktop file-systems texinfo
                      xdisorg gnome version-control package-management vim)
 
 (operating-system
@@ -62,32 +64,37 @@
                 (shell (file-append bash "/bin/bash")))
                %base-user-accounts))
 
- (packages 
+ (packages
 	(list bluez
           bluez-alsa
 		  brightnessctl
-          exfat-utils
-          fuse-exfat
+          ;; exfat-utils
+          ;; fuse-exfat
           git
-          gvfs
+          ;; gvfs
           ;; intel-vaapi-driver
           ;; libva-utils
-          ntfs-3g
+          ;; ntfs-3g
           stow
           vim
-				
-			inetutils shadow zzz
-			coreutils diffutils findutils grep sed tar which 
-			bash 
-			nss-certs
-			gzip xz zstd 
-			gawk
-			guile-3.0 guile-colorized guile-readline
-			less
-			iproute kmod procps usbutils util-linux
-			man-db man-pages
-			pciutils
-			info-reader))
+
+          inetutils shadow ;; zzz
+          coreutils diffutils findutils grep sed tar which
+          bash
+          nss-certs
+          gzip xz zstd
+          gawk
+          guile-3.0 guile-colorized guile-readline
+          less
+          iproute kmod procps usbutils util-linux
+          man-db man-pages
+          pciutils
+          info-reader))
+
+ (privileged-programs
+     (append authentication
+            file-systems
+            network))
 
  (services
   (list ;; (service elogind-service-type)
@@ -109,27 +116,27 @@
                           #$tuigreet "/bin/tuigreet "
                           "--time " "--cmd river "
                           "--power-shutdown 'loginctl poweroff' "
-                          "--power-reboot 'loginctl reboot'")))
-                    ;; (greetd-terminal-configuration (terminal-vt "2"))
-                    ;; (greetd-terminal-configuration (terminal-vt "3"))
-                    ;; (greetd-terminal-configuration (terminal-vt "4"))
-                    ;; (greetd-terminal-configuration (terminal-vt "5"))
-                    ;; (greetd-terminal-configuration (terminal-vt "6"))
-                    ))))
+                          "--power-reboot 'loginctl reboot'")))))))
         ;; (service screen-locker-service-type
         ;;          (screen-locker-configuration
         ;;           (name "hyprlock")
         ;;           (program (file-append hyprlock "/bin/hyprlock"))))
 
         ;; Give certain programs super-user access
-        (simple-service 'mount-setuid-helpers
-                        privileged-program-service-type
-                        (map (lambda (program)
-                               (privileged-program
-                                (program program)
-                                (setuid? #t)))
-                             (list (file-append nfs-utils "/sbin/mount.nfs")
-                                   (file-append ntfs-3g "/sbin/mount.ntfs-3g"))))
+        ;; (simple-service 'mount-setuid-helpers
+        ;;                 privileged-program-service-type
+        ;;                 (map (lambda (program)
+        ;;                        (privileged-program
+        ;;                         (program program)
+        ;;                         (setuid? #t)))
+        ;;                      (list (file-append nfs-utils "/sbin/mount.nfs")
+        ;;                            (file-append ntfs-3g "/sbin/mount.ntfs-3g"))))
+
+
+        ;; Deevice management services
+        (service udev-service-type
+            (udev-configuration
+                (rules (list crda fuse))))
 
         ;; Networking services
         ;; (service network-manager-service-type)
@@ -217,12 +224,6 @@
                   (nmi-watchdog? #t)
                   (start-charge-thresh-bat0 70)
                   (stop-charge-thresh-bat0 90)))
-        ;; (service tlp-service-type
-        ;;          (tlp-configuration
-        ;;           (wifi-pwr-on-bat? #t)
-        ;;           (cpu-boost-on-ac? #t)
-        ;;           (start-charge-thresh-bat0 70)
-        ;;           (stop-charge-thresh-bat0 90)))
         (service thinkfan-service-type
                  (thinkfan-configuration
                   (thinkfan thinkfan-next)
@@ -249,7 +250,7 @@
         ;; Add udev rules for a few packages
         (udev-rules-service 'pipewire-add-udev-rules pipewire)
         (udev-rules-service 'brightnessctl-udev-rules brightnessctl)
-		
+
         ;; Special file services
         (service special-files-service-type
                  `(("/bin/sh" ,(file-append bash "/bin/bash"))
@@ -259,7 +260,7 @@
                         (map (lambda (dir)
                                (list dir (string-append "/gnu/persist" dir)))
                              persistent-files))
-		
+
 		;; Base services
         (service sysctl-service-type)
         (service urandom-seed-service-type)
@@ -267,6 +268,6 @@
 
  ;; Allow resolution of '.local' host names with mDNS
  (name-service-switch %mdns-host-lookup-nss)
- 
+
  ;; Do not generate a sudoers file
  (sudoers-file #f))
