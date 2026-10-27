@@ -107,15 +107,15 @@
                               size=20%")))
 
         ;; Snapshots
-        (file-system
-         (device partition-guix)
-         (type "btrfs")
-         (mount-point "/snapshots")
-         (check? #f)
-         (needed-for-boot? #t)
-         (flags '(no-atime))
-         (options (format #f "compress=zstd,~
-                              subvol=@snapshots")))
+        ;; (file-system
+        ;;  (device partition-guix)
+        ;;  (type "btrfs")
+        ;;  (mount-point "/snapshots")
+        ;;  (check? #f)
+        ;;  (needed-for-boot? #t)
+        ;;  (flags '(no-atime))
+        ;;  (options (format #f "compress=zstd,~
+        ;;                       subvol=@snapshots")))
 
         ;; Home
         (file-system

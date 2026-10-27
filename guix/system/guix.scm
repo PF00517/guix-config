@@ -8,7 +8,7 @@
              (guix packages linux)
              (guix system modules files)
              (guix system modules secrets)
-             (guix system modules privilege)
+             ((guix system modules privilege) #:prefix priveleged:)
 			 (guix system modules file-systems)
              ((guix system substitute-keys) #:prefix substitute-key:)
              (guix gexp))
@@ -92,9 +92,9 @@
           info-reader))
 
  (privileged-programs
-     (append authentication
-            file-systems
-            network))
+     (append priveleged:authentication
+            priveleged:file-systems
+            priveleged:network))
 
  (services
   (list ;; (service elogind-service-type)
