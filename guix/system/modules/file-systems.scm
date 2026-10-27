@@ -9,7 +9,7 @@
   (file-system-label "guix"))
 
 (define volumes
-  (list base
+  (list ;; Base
         %pseudo-terminal-file-system
         %shared-memory-file-system
 
