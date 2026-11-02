@@ -3,23 +3,23 @@
              (gnu system nss)
              (gnu system accounts)
              (gnu system privilege)
-			 (guix services pm)
-             (guix system base)
+  #|Guix|#   (guix services pm)
              (guix packages linux)
+             (guix system base)
              (guix system modules files)
              (guix system modules secrets)
+             ((guix system modules file-systems) #:prefix file-system:)
              ((guix system modules privilege) #:prefix priveleged:)
-			 (guix system modules file-systems)
-             ((guix system substitute-keys) #:prefix substitute-key:)
+             ((guix system modules substitute-keys) #:prefix substitute-key:)
              (guix gexp))
 
-(use-service-modules admin base pm avahi dbus cups desktop guix
-                     linux networking xorg shepherd sysctl)
+(use-service-modules admin base pm ;; avahi cups
+                     dbus desktop guix linux
+                     networking xorg shepherd sysctl)
 
-(use-package-modules audio admin bash base video nfs nss linux shells
-                     compression gawk guile guile-xyz less man pciutils ;; window-management
-					 libusb cups freedesktop file-systems texinfo
-                     xdisorg gnome version-control package-management vim)
+(use-package-modules admin bash base nss linux shells compression gawk
+                     guile guile-xyz less man pciutils file-systems
+                     texinfo version-control package-management vim)
 
 (operating-system
  (inherit base)
@@ -27,7 +27,7 @@
  (timezone "Europe/Kyiv")
  (locale "en_US.utf8")
 
- (kernel linux-libre-6.17)
+ (kernel linux-libre-7.1)
  (kernel-arguments
   `("console=tty1"
     "modprobe.blacklist=usbmouse,usbkbd,pcspkr"
@@ -40,7 +40,8 @@
               (bootloader grub-bootloader)
               (targets '("/dev/disk/by-id/ata-CT120BX500SSD1_1925E18A61AF"))))
 
- (file-systems (append volumes persistent-directories))
+ (file-systems (append file-system:volumes
+                       file-system:persistent-directories))
 
  (users (cons* (user-account
                 (name "lain")
@@ -78,7 +79,7 @@
           stow
           vim
 
-          inetutils shadow ;; zzz
+          inetutils shadow zzz
           coreutils diffutils findutils grep sed tar which
           bash
           nss-certs
@@ -92,17 +93,25 @@
           info-reader))
 
  (privileged-programs
-     (append priveleged:authentication
-            priveleged:file-systems
-            priveleged:network))
+   (append priveleged:authentication
+           priveleged:file-systems
+           priveleged:network))
 
  (services
-  (list ;; (service elogind-service-type)
-        (service seatd-service-type)
-
-        ;; TTY
+  (list ;; TTY
         (service virtual-terminal-service-type)
+        (service console-font-service-type
+                 `(("tty1" . ,%default-console-font)
+                   ("tty2" . ,%default-console-font)))
 
+        ;; Shepherd services
+        ;; (service radix:shepherd-timer-service-type
+        ;;          (list timer:guix-gc))
+        (service shepherd-timer-service-type)
+        (service shepherd-transient-service-type)
+
+        ;; Login services
+        (service seatd-service-type)
         (service greetd-service-type
                  (greetd-configuration
                   (greeter-supplementary-groups `("seat"))
@@ -133,7 +142,7 @@
         ;;                            (file-append ntfs-3g "/sbin/mount.ntfs-3g"))))
 
 
-        ;; Deevice management services
+        ;; Device management services
         (service udev-service-type
             (udev-configuration
                 (rules (list crda fuse))))
@@ -173,10 +182,10 @@
                   (expiry (* 2 30 24 3600))))
 
         ;; Basic desktop system services (copied from %desktop-services)
-        (service avahi-service-type)
-        (service udisks-service-type)
-        (service upower-service-type)
-        (service cups-pk-helper-service-type)
+        ;; (service avahi-service-type)
+        ;; (service udisks-service-type)
+        ;; (service upower-service-type)
+        ;; (service cups-pk-helper-service-type)
         ;; (service geoclue-service-type)
         ;; (service polkit-service-type)
         (service dbus-root-service-type)
@@ -230,13 +239,26 @@
                   (auto-start? #f)
                   (config-file thinkfan-config)))
 
+        ;; Memory management services
+        (service zram-device-service-type
+            (zram-device-configuration
+                (priority 100)
+                (size (* 2 (ram-total)))
+                (compression-algorithm 'lz4)))
+        (simple-service 'zram-sysctl-settings
+                        sysctl-service-type
+                        `(("vm.swappiness" . "180")
+                          ("vm.watermark_boost_factor" . "0")
+                          ("vm.watermark_scale_factor" . "125")
+                          ("vm.page-cluster" . "0")))
+
         ;; Enable printing and scanning
-        (service sane-service-type)
-        (service cups-service-type
-                 (cups-configuration
-                  (web-interface? #t)
-                  (extensions
-                   (list cups-filters))))
+        ;; (service sane-service-type)
+        ;; (service cups-service-type
+        ;;          (cups-configuration
+        ;;           (web-interface? #t)
+        ;;           (extensions
+        ;;            (list cups-filters))))
 
         ;; Set up the X11 socket directory for XWayland
         ;; (service x11-socket-directory-service-type)
@@ -245,7 +267,7 @@
         (service ntp-service-type)
 
         ;; Add udev rules for MTP (mobile) devices for non-root user access
-        (simple-service 'mtp udev-service-type (list libmtp))
+        ;; (simple-service 'mtp udev-service-type (list libmtp))
 
         ;; Add udev rules for a few packages
         (udev-rules-service 'pipewire-add-udev-rules pipewire)
@@ -259,7 +281,7 @@
                         special-files-service-type
                         (map (lambda (dir)
                                (list dir (string-append "/gnu/persist" dir)))
-                             persistent-files))
+                             file-system:persistent-files))
 
 		;; Base services
         (service sysctl-service-type)
