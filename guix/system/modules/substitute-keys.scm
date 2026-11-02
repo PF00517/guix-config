@@ -1,4 +1,4 @@
-(define-module (guix system substitute-keys)
+(define-module (guix system modules substitute-keys)
   #:use-module (gnu)
   #:export (berlin.pub
             genenetwork.pub
@@ -65,7 +65,8 @@
 (define nonguix.pub
   (plain-file "nonguix.pub"
     "(public-key
-      (ecc (curve Ed25519)
-      (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)
-     )
-    )"))
+      (ecc
+       (curve Ed25519)
+       (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)
+      )
+     )"))
