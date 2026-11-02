@@ -200,11 +200,13 @@
                           substitute-key:inria.pub
                           substitute-key:moe.pub
                           substitute-key:yumiko.pub
+                          ;; substitute-key:nonguix.pub
                           %default-authorized-guix-keys))
                   (substitute-urls
                    `("https://cache-us-lax.guix.moe"
                      "https://cuirass.genenetwork.org"
                      "https://ci.guix.gnu.org"
+                     ;; "https://substitutes.nonguix.org"
                      "https://guix.bordeaux.inria.fr"))
                   (extra-options
                    `("--cores=4"

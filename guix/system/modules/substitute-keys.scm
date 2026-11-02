@@ -5,7 +5,8 @@
             inria.pub
             moe.pub
             yumiko.pub
-            yuria.pub))
+            yuria.pub
+            nonguix.pub))
 
 (define berlin.pub
   (plain-file "berlin.pub"
@@ -60,3 +61,11 @@
        (q #D5D0C1203D294B410DA106DDC1713B74CBB27353D53F4EE3D9D26972E8687424#)
       )
      )"))
+
+(define nonguix.pub
+  (plain-file "nonguix.pub"
+    "(public-key
+      (ecc (curve Ed25519)
+      (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)
+     )
+    )"))
